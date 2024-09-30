@@ -52,6 +52,7 @@
           python3_env
           pkgs.cudaPackages.cudnn.lib
         ];
+        runCommand = "LD_LIBRARY_PATH=/run/opengl-driver/lib/:${pkgs.cudaPackages.cudnn.lib}/lib/:$LD_LIBRARY_PATH venv_dir=- ./webui.sh --skip-prepare-environment";
       };
     };
 }
