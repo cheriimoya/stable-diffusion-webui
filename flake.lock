@@ -80,16 +80,17 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "dirtyRev": "ef877b8e159b23f36ebc39155021657bed744a68-dirty",
-        "dirtyShortRev": "ef877b8-dirty",
-        "lastModified": 1727711975,
-        "narHash": "sha256-RofemQmFX2DoOIvCKjJbwl4tEbRarMYpMGu27Irii8g=",
-        "type": "git",
-        "url": "file:///tmp/stable/poetry2nix"
+        "lastModified": 1727724480,
+        "narHash": "sha256-dYOPDO7wQK4uo6j0u0mPbNMMcW+jaY4HQd2uNYU6B4Y=",
+        "owner": "cheriimoya",
+        "repo": "poetry2nix",
+        "rev": "2f3c7486e15d505156eb3cfbf1dc2a8b6ab4f04e",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///tmp/stable/poetry2nix"
+        "owner": "cheriimoya",
+        "repo": "poetry2nix",
+        "type": "github"
       }
     },
     "root": {

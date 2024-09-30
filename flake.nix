@@ -24,34 +24,20 @@
         projectDir = ./.;
         python = pkgs.python311;
         overrides = overrides.withDefaults (
-          final: prev: {
-            resize-right = prev.resize-right.overridePythonAttrs (old: {
-              nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ prev.setuptools ];
-            });
-            lazy-loader = prev.lazy-loader.overridePythonAttrs (old: {
-              nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ prev.setuptools ];
-            });
-            pillow-avif-plugin = prev.pillow-avif-plugin.overridePythonAttrs (old: {
-              nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ prev.setuptools ];
-              buildInputs = old.buildInputs or [ ] ++ [ pkgs.libavif ];
-            });
-            safetensors = prev.safetensors.override { preferWheel = true; };
-            tokenizers = prev.tokenizers.override { preferWheel = true; };
-            blendmodes = prev.blendmodes.override { preferWheel = true; };
+          _: prev: {
             numba = prev.numba.override { preferWheel = true; };
-            opencv-python = prev.opencv-python.override { preferWheel = true; };
             open-clip-torch = prev.open-clip-torch.override { preferWheel = true; };
+            opencv-python = prev.opencv-python.override { preferWheel = true; };
+            safetensors = prev.safetensors.override { preferWheel = true; };
             scikit-image = prev.scikit-image.override { preferWheel = true; };
+            tokenizers = prev.tokenizers.override { preferWheel = true; };
           }
         );
       };
     in
     {
       devShells.x86_64-linux.default = pkgs.mkShell {
-        buildInputs = [
-          python3_env
-          pkgs.cudaPackages.cudnn.lib
-        ];
+        buildInputs = [ python3_env ];
         runCommand = "LD_LIBRARY_PATH=/run/opengl-driver/lib/:${pkgs.cudaPackages.cudnn.lib}/lib/:$LD_LIBRARY_PATH venv_dir=- ./webui.sh --skip-prepare-environment";
       };
     };
