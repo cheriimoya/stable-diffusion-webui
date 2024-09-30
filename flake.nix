@@ -1,8 +1,13 @@
 {
   inputs.nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+  inputs.poetry2nix.url = "github:cheriimoya/poetry2nix";
 
   outputs =
-    { self, nixpkgs }:
+    {
+      self,
+      nixpkgs,
+      poetry2nix,
+    }:
     let
       pkgs = import nixpkgs {
         system = "x86_64-linux";
@@ -10,106 +15,43 @@
           cudaSupport = true;
           allowUnfree = true;
         };
+        # 12.4 is currently broken
         overlays = [ (_: final: { cudaPackages = final.cudaPackages_12_3; }) ];
       };
+      inherit (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; }) mkPoetryEnv overrides;
 
-      blendmodes = pkgs.python3Packages.buildPythonPackage rec {
-        pname = "blendmodes";
-        version = "2024.1.1";
-        pyproject = true;
-
-        src = pkgs.fetchPypi {
-          inherit pname version;
-          hash = "sha256-pARiphBO19gklFVzrHVwcUKe5/o+3tJ71pfR06D11Hc=";
-        };
-        buildInputs = [ pkgs.python3Packages.poetry-core ];
-        checkInputs = with pkgs.python3Packages; [
-          pillow
-          aenum
-          numpy
-        ];
+      python3_env = mkPoetryEnv {
+        projectDir = ./.;
+        python = pkgs.python311;
+        overrides = overrides.withDefaults (
+          final: prev: {
+            resize-right = prev.resize-right.overridePythonAttrs (old: {
+              nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ prev.setuptools ];
+            });
+            lazy-loader = prev.lazy-loader.overridePythonAttrs (old: {
+              nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ prev.setuptools ];
+            });
+            pillow-avif-plugin = prev.pillow-avif-plugin.overridePythonAttrs (old: {
+              nativeBuildInputs = old.nativeBuildInputs or [ ] ++ [ prev.setuptools ];
+              buildInputs = old.buildInputs or [ ] ++ [ pkgs.libavif ];
+            });
+            safetensors = prev.safetensors.override { preferWheel = true; };
+            tokenizers = prev.tokenizers.override { preferWheel = true; };
+            blendmodes = prev.blendmodes.override { preferWheel = true; };
+            numba = prev.numba.override { preferWheel = true; };
+            opencv-python = prev.opencv-python.override { preferWheel = true; };
+            open-clip-torch = prev.open-clip-torch.override { preferWheel = true; };
+            scikit-image = prev.scikit-image.override { preferWheel = true; };
+          }
+        );
       };
-
-      tomesd = pkgs.python3Packages.buildPythonPackage rec {
-        pname = "tomesd";
-        version = "v0.1.3";
-        src = pkgs.fetchFromGitHub {
-          repo = pname;
-          owner = "dbolya";
-          rev = version;
-          hash = "sha256-U3LN6KmQx/ulepFxjWgYHJl5g8j1U3HIGunpjcZBcos=";
-        };
-      };
-
-      pillow-avif-plugin = pkgs.python3Packages.buildPythonPackage rec {
-        pname = "pillow-avif-plugin";
-        version = "v1.4.6";
-        src = pkgs.fetchFromGitHub {
-          repo = pname;
-          owner = "fdintino";
-          rev = version;
-          hash = "sha256-fppFgGrtj5c6eR3B3vodM9sicSHcKdpL7tUPL9PDUD0=";
-        };
-        buildInputs = [ pkgs.libavif ];
-      };
-
-      python_env = pkgs.python3.withPackages (
-        ps: with ps; [
-          GitPython
-          pillow
-          accelerate
-
-          blendmodes
-
-          clean-fid
-          diskcache
-          einops
-          # facexlib
-          fastapi
-          gradio
-          inflection
-          jsonmerge
-          kornia
-          lark
-          numpy
-          omegaconf
-          open-clip-torch
-
-          piexif
-          protobuf
-          psutil
-          pytorch-lightning
-          requests
-          resize-right
-
-          safetensors
-          scikit-image
-
-          tomesd
-
-          torch
-          torchdiffeq
-          torchsde
-          transformers
-
-          pillow-avif-plugin
-
-          opencv4
-          dctorch
-          clip
-          xformers
-          aenum
-
-          ipython
-
-        ]
-      );
     in
     {
-      devShells.x86_64-linux.default = pkgs.mkShell { buildInputs = [ python_env ]; };
-      packages.x86_64-linux = {
-        inherit python_env;
-        inherit (pkgs.python3Packages) opencv4;
+      devShells.x86_64-linux.default = pkgs.mkShell {
+        buildInputs = [
+          python3_env
+          pkgs.cudaPackages.cudnn.lib
+        ];
       };
     };
 }
